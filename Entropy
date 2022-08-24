@@ -1,0 +1,31 @@
+import csv
+import pandas as pd
+import openpyxl
+import math
+races_file = open('races.csv', 'r')
+data_races = pd.read_csv('races.csv')
+row_races = []
+for row in data_races:
+    row_races.append(row)
+print(row_races)
+#START WORKING
+wb = openpyxl.load_workbook('races.xlsx')
+sheet = wb.active
+cell = sheet['G1']
+rowraces = []
+#We take the value of the distance column only
+for cell in sheet['G']:
+    if cell.value != 'distance':
+        rowraces.append(cell.value)
+distance=dict((x, rowraces.count(x)) for x in set(rowraces) if rowraces.count(x) > 1)
+#General race distances with their occurrence
+print("Distances with their occurrence", distance)
+rgx=list(set(rowraces))
+dist = []
+for k, v in distance.items(): 
+    dist.append(v)
+n=0
+for i in range(len(rgx)):
+    n = (dist[i]/sum(dist))*(math.log2(dist[i]/sum(dist)))
+#The total entropy of the race distances
+print("Entropy of distance:",-n)
