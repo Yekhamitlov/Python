@@ -1,0 +1,386 @@
+import openpyxl
+import math
+import pandas as pd
+import csv
+wb = openpyxl.load_workbook('forestfires.xlsx')
+sheet = wb.active
+data = pd.read_csv('forestfires.csv')
+
+
+# In[4]:
+
+
+data
+
+
+# In[5]:
+
+
+сell = sheet['I1']
+temp = []
+#We take the value of the temp column only
+for cell in sheet['I']:
+    if cell.value != 'temp':
+        temp.append(cell.value)
+
+
+# In[6]:
+
+
+cell = sheet['E1']
+FFMC = []
+for cell in sheet['E']:
+    if cell.value!='FFMC':
+        FFMC.append(cell.value)
+
+
+# In[7]:
+
+
+cell = sheet['F1']
+DMC = []
+for cell in sheet['F']:
+    if cell.value!='DMC':
+        DMC.append(cell.value)
+
+
+# In[8]:
+
+
+cell = sheet['G1']
+DC = []
+for cell in sheet['G']:
+    if cell.value!='DC':
+        DC.append(cell.value)
+
+
+# In[9]:
+
+
+cell = sheet['H1']
+ISI = []
+for cell in sheet['H']:
+    if cell.value!='ISI':
+        ISI.append(cell.value)
+
+
+# In[10]:
+
+
+сell = sheet['J1']
+RH = []
+#We take the value of the relative humidity column only
+for cell in sheet['J']:
+    if cell.value != 'RH':
+        RH.append(cell.value)
+
+
+# In[11]:
+
+
+сell = sheet['K1']
+wind = []
+#We take the value of the wind column only
+for cell in sheet['K']:
+    if cell.value != 'wind':
+        wind.append(cell.value)
+
+
+# In[12]:
+
+
+сell = sheet['L1']
+rain = []
+#We take the value of the rain column only
+for cell in sheet['L']:
+    if cell.value != 'rain':
+        rain.append(cell.value)
+
+
+# In[13]:
+
+
+cell = sheet['M1']
+area = []
+for cell in sheet['M']:
+    if cell.value!='area':
+        area.append(cell.value)
+
+
+# In[14]:
+
+
+#To improve the accuracy of data forecasting, you need to normalize the data
+import numpy as np
+temp_raw = []
+for i in range(len(temp)):
+    a = (temp[i]-np.mean(temp))/np.std(temp)
+    if a>0:
+        temp_raw.append(a)
+    else:
+        temp_raw.append(-a)
+RH_raw = []
+for i in range(len(RH)):
+    a = (RH[i]-np.mean(RH))/np.std(RH)
+    if a>0:
+        RH_raw.append(a)
+    else:
+        RH_raw.append(-a)
+wind_raw = []
+for i in range(len(wind)):
+    a = (wind[i]-np.mean(wind))/np.std(wind)
+    if a>0:
+        wind_raw.append(a)
+    else:
+        wind_raw.append(-a)
+rain_raw = []
+for i in range(len(rain)):
+    a = (rain[i]-np.mean(rain))/np.std(rain)
+    if a>0:
+        rain_raw.append(a)
+    else:
+        rain_raw.append(-a)
+
+
+# In[15]:
+
+
+import numpy as np
+area_raw = []
+for i in range(len(area)):
+    a = (area[i]-np.mean(area))/np.std(area)
+    if a>0:
+        area_raw.append(a)
+    else:
+        area_raw.append(-a)
+FFMC_raw = []
+for i in range(len(FFMC)):
+    a = (FFMC[i]-np.mean(FFMC))/np.std(FFMC)
+    if a>0:
+        FFMC_raw.append(a)
+    else:
+        FFMC_raw.append(-a)
+DMC_raw = []
+for i in range(len(DMC)):
+    a = (DMC[i]-np.mean(DMC))/np.std(DMC)
+    if a>0:
+        DMC_raw.append(a)
+    else:
+        DMC_raw.append(-a)
+DC_raw = []
+for i in range(len(DC)):
+    a = (DC[i]-np.mean(DC))/np.std(DC)
+    if a>0:
+        DC_raw.append(a)
+    else:
+        DC_raw.append(-a)
+ISI_raw = []
+for i in range(len(ISI)):
+    a = (ISI[i]-np.mean(ISI))/np.std(ISI)
+    if a>0:
+        ISI_raw.append(a)
+    else:
+        ISI_raw.append(-a)
+
+
+# In[20]:
+
+
+import numpy as np
+diagramm = []
+def KL(a, b):
+    a = np.asarray(a, dtype=np.float)
+    b = np.asarray(b, dtype=np.float)
+    diagramm.append(np.sum(np.where(a != 0, a * np.log(a / b), 0)))
+    return np.sum(np.where(a != 0, a * np.log(a / b), 0))
+
+
+print("Divergence of area and temperature:",KL(area_raw,temp_raw))
+print("Divergence of area and rain:",KL(area_raw,rain_raw))
+print("Divergence of area and wind:",KL(area_raw,wind_raw))
+print("Divergence of area and relative humidity:",KL(area_raw,RH_raw))
+print("Divergence of area and initial spread of fire:",KL(area_raw,ISI_raw))
+print("Divergence of area and the norm of drought:",KL(area_raw,DC_raw))
+print("Divergence of area and Humidity of coal:",KL(area_raw,DMC_raw))
+print("Divergence of area and ease of ignition of fuel:",KL(area_raw,FFMC_raw))
+
+
+# In[23]:
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.colors as mcolors
+bc = mcolors.BASE_COLORS
+groups = [f"P{i}" for i in range(7)]
+counts = np.random.randint(0, len(bc), len(groups))
+
+colors = [["r", "b", "g"][int(np.random.randint(0, 3, 1))] for _ in counts]
+plt.barh(diagramm, 15,6,color=colors)
+
+
+# In[102]:
+
+
+#RH,temp,DMC,DC
+import matplotlib.pyplot as plt
+import pandas as pd
+#The higher the temperature, the more the fire covered the area
+fig, ax = plt.subplots(figsize=(6, 3))
+ax.scatter(x = temp_raw , y = area_raw)
+plt.xlabel("Temp")
+plt.ylabel("Area")
+plt.show()
+
+
+# In[103]:
+
+
+import matplotlib.pyplot as plt
+import pandas as pd
+#The lower the relative humidity, the more the fire covered the area
+fig, ax = plt.subplots(figsize=(6, 3))
+ax.scatter(x = RH_raw , y = area_raw)
+plt.xlabel("Relative humidity")
+plt.ylabel("Area")
+plt.show()
+
+
+# In[105]:
+
+
+import matplotlib.pyplot as plt
+import pandas as pd
+#The lower the Humidity of coal, the more the fire covered the area
+fig, ax = plt.subplots(figsize=(6, 3))
+ax.scatter(x = DMC_raw , y = area_raw)
+plt.xlabel("Humidity of coal")
+plt.ylabel("Area")
+plt.show()
+
+
+# In[106]:
+
+
+import matplotlib.pyplot as plt
+import pandas as pd
+#The Higher the the norm of drought, the more the fire covered the area
+fig, ax = plt.subplots(figsize=(6, 3))
+ax.scatter(x = DC_raw , y = area_raw)
+plt.xlabel("the norm of drought")
+plt.ylabel("Area")
+plt.show()
+
+
+# In[108]:
+
+
+import matplotlib.pyplot as plt
+import pandas as pd
+#TThe more precipitation, the smaller the fire area
+fig, ax = plt.subplots(figsize=(6, 3))
+ax.scatter(x = rain_raw , y = area_raw)
+plt.xlabel("Rain")
+plt.ylabel("Area")
+plt.show()
+
+
+# In[51]:
+
+
+import pandas as pd
+from sklearn.datasets import load_iris
+from factor_analyzer import FactorAnalyzer
+import matplotlib.pyplot as plt
+df= pd.read_csv("forestfires.csv")
+df.columns
+
+
+# In[52]:
+
+
+df.drop(['X', 'Y', 'month','day'],axis=1,inplace=True)
+df.columns
+df.dropna(inplace=True)
+
+
+# In[53]:
+
+
+data1 = df
+
+
+# In[54]:
+
+
+df.info()
+
+
+# In[55]:
+
+
+df.head()
+
+
+# In[56]:
+
+
+from factor_analyzer.factor_analyzer import calculate_kmo
+kmo_all,kmo_model=calculate_kmo(df)
+kmo_model
+
+
+# In[57]:
+
+
+from factor_analyzer import FactorAnalyzer
+fa = FactorAnalyzer()
+fa.fit(df)
+ev, v = fa.get_eigenvalues()
+ev
+
+
+# In[58]:
+
+
+plt.scatter(range(1,df.shape[1]+1),ev)
+plt.plot(range(1,df.shape[1]+1),ev)
+plt.title('Scree Plot')
+plt.xlabel('Factors')
+plt.ylabel('Eigenvalue')
+plt.grid()
+plt.show()
+
+
+# In[70]:
+
+
+import os
+import pandas as pd
+import numpy as np
+import seaborn as sn
+# Loading the dataset
+data = pd.read_csv("forestfires.csv")
+data.drop(['X', 'Y', 'month','day'],axis=1,inplace=True)
+numeric_col = ['FFMC', 'DC', 'temp', 'wind','area']
+#Using Correlation analysis to depict the relationship between the numeric/continuous data variables
+corr = data.loc[:,numeric_col].corr()
+print(corr)
+sn.heatmap(corr, annot=True)
+
+
+# In[71]:
+
+
+import os
+import pandas as pd
+import numpy as np
+import seaborn as sn
+# Loading the dataset
+data1 = pd.read_csv("forestfires.csv")
+data1.drop(['X', 'Y', 'month','day'],axis=1,inplace=True)
+numeric_col = ['DMC', 'ISI', 'RH','rain','area']
+#Using Correlation analysis to depict the relationship between the numeric/continuous data variables
+corr = data1.loc[:,numeric_col].corr()
+print(corr)
+sn.heatmap(corr, annot=True)
